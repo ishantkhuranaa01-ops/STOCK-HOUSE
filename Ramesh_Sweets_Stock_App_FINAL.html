@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="RS Stock"/>
+<meta name="theme-color" content="#FF6600"/>
+<title>Ramesh Sweets — Stock</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --brown: #3E1C00;
+  --orange: #FF6600;
+  --green: #2E7D32;
+  --green-light: #E8F5E9;
+  --red: #C62828;
+  --red-light: #FFEBEE;
+  --red-mid: #EF5350;
+  --bg: #F7F2EE;
+  --card: #FFFFFF;
+  --text: #1A1A1A;
+  --text2: #666;
+  --text3: #AAA;
+  --border: #EEE;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+.header{background:var(--brown);padding:calc(var(--safe-top) + 14px) 18px 14px;position:sticky;top:0;z-index:100;}
+.header-top{display:flex;align-items:center;justify-content:space-between;}
+.header h1{font-size:17px;font-weight:800;color:#fff;letter-spacing:0.3px;}
+.header p{font-size:11px;color:rgba(255,255,255,0.6);margin-top:1px;}
+.sync-label{display:flex;align-items:center;gap:5px;font-size:11px;color:rgba(255,255,255,0.75);}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:#888;transition:background 0.3s;flex-shrink:0;}
+.sync-dot.online{background:#4CAF50;}
+.sync-dot.syncing{background:#FF9800;animation:pulse 0.7s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
+.summary{display:flex;background:var(--orange);padding:10px 18px;}
+.sum-item{flex:1;text-align:center;}
+.sum-item+.sum-item{border-left:1px solid rgba(255,255,255,0.3);}
+.sum-label{font-size:10px;color:rgba(255,255,255,0.85);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;}
+.sum-val{font-size:22px;font-weight:900;color:#fff;line-height:1.2;}
+
+.last-saved{text-align:center;font-size:10.5px;color:var(--text3);padding:7px 16px 2px;}
+
+.cards{padding:12px 14px calc(var(--safe-bottom) + 80px);display:flex;flex-direction:column;gap:10px;}
+
+.card{background:var(--card);border-radius:16px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.07);border:1.5px solid transparent;transition:border-color 0.2s;}
+.card.low{border-color:var(--red-mid);}
+.card-header{display:flex;align-items:center;justify-content:space-between;padding:13px 16px 10px;border-bottom:1px solid var(--border);}
+.card-left{display:flex;align-items:center;gap:10px;}
+.card-dot{width:10px;height:10px;border-radius:50%;background:var(--orange);flex-shrink:0;}
+.card-name{font-size:15px;font-weight:800;color:var(--text);}
+.card-right{display:flex;align-items:baseline;gap:4px;}
+.card-stock{font-size:28px;font-weight:900;color:var(--brown);line-height:1;}
+.card-unit{font-size:12px;font-weight:600;color:var(--text3);}
+.low-pill{background:var(--red-light);color:var(--red);font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;margin-left:6px;}
+
+.card-controls{display:flex;align-items:center;gap:8px;padding:10px 14px;}
+.qty-box{display:flex;align-items:center;border:1.5px solid var(--border);border-radius:10px;overflow:hidden;background:var(--bg);}
+.qty-btn{width:34px;height:34px;border:none;background:none;font-size:20px;font-weight:700;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.qty-btn:active{background:var(--border);}
+.qty-disp{width:36px;text-align:center;font-size:14px;font-weight:800;color:var(--text);border-left:1px solid var(--border);border-right:1px solid var(--border);height:34px;line-height:34px;}
+.act-btn{flex:1;height:38px;border-radius:10px;border:none;font-size:13px;font-weight:800;cursor:pointer;transition:opacity 0.15s,transform 0.1s;font-family:'Nunito',sans-serif;}
+.act-btn:active{opacity:0.75;transform:scale(0.97);}
+.btn-add{background:var(--green-light);color:var(--green);}
+.btn-use{background:var(--red-light);color:var(--red);}
+
+.card-log{padding:0 14px 10px;max-height:72px;overflow-y:auto;}
+.log-entry{display:flex;justify-content:space-between;font-size:11px;line-height:1.9;}
+.log-in{color:var(--green);font-weight:700;}
+.log-out{color:var(--red);font-weight:700;}
+.log-time{color:var(--text3);font-size:10.5px;}
+.log-empty{font-size:11px;color:var(--text3);}
+
+.bottom-bar{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);padding:10px 16px calc(var(--safe-bottom) + 10px);display:flex;gap:10px;z-index:100;}
+.bot-btn{flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);font-size:13px;font-weight:700;color:var(--text2);cursor:pointer;font-family:'Nunito',sans-serif;}
+.bot-btn:active{background:var(--border);}
+
+.toast{position:fixed;bottom:calc(var(--safe-bottom) + 70px);left:50%;transform:translateX(-50%) translateY(10px);background:var(--green);color:#fff;font-size:12px;font-weight:700;padding:8px 20px;border-radius:30px;opacity:0;transition:all 0.3s;white-space:nowrap;z-index:200;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.err{background:var(--red);}
+
+.overlay{position:fixed;inset:0;background:var(--brown);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;transition:opacity 0.4s;}
+.overlay.hide{opacity:0;pointer-events:none;}
+.ov-logo{font-size:24px;font-weight:900;color:#fff;margin-bottom:6px;font-family:'Nunito',sans-serif;}
+.ov-sub{font-size:13px;color:rgba(255,255,255,0.55);font-family:'Nunito',sans-serif;}
+.spinner{width:32px;height:32px;border:3px solid rgba(255,255,255,0.2);border-top-color:#FF6600;border-radius:50%;animation:spin 0.7s linear infinite;margin-bottom:18px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+
+<div class="overlay" id="overlay">
+  <div class="spinner"></div>
+  <div class="ov-logo">Ramesh Sweets</div>
+  <div class="ov-sub" id="ov-msg">Connecting to database...</div>
+</div>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <h1>Ramesh Sweets Workshop</h1>
+      <p>Store House · Raw Material Stock</p>
+    </div>
+    <div class="sync-label">
+      <span class="sync-dot" id="sync-dot"></span>
+      <span id="sync-txt">Connecting</span>
+    </div>
+  </div>
+</div>
+
+<div class="summary">
+  <div class="sum-item"><div class="sum-label">Added Today</div><div class="sum-val" id="s-in">0</div></div>
+  <div class="sum-item"><div class="sum-label">Used Today</div><div class="sum-val" id="s-out">0</div></div>
+  <div class="sum-item"><div class="sum-label">Low Stock</div><div class="sum-val" id="s-low">0</div></div>
+</div>
+
+<div class="last-saved" id="last-saved"></div>
+<div class="cards" id="cards"></div>
+
+<div class="bottom-bar">
+  <button class="bot-btn" onclick="resetAll()">Reset Stock</button>
+  <button class="bot-btn" onclick="clearLogs()">Clear Logs</button>
+</div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp }                   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getDatabase, ref, onValue, set }  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+const firebaseConfig = {
+  apiKey:            "AIzaSyC5wWmuzf0TOWv-DKHZVaInHKOEn47XC18",
+  authDomain:        "ramesh-sweets-storehouse-stock.firebaseapp.com",
+  databaseURL:       "https://ramesh-sweets-storehouse-stock-default-rtdb.firebaseio.com",
+  projectId:         "ramesh-sweets-storehouse-stock",
+  storageBucket:     "ramesh-sweets-storehouse-stock.firebasestorage.app",
+  messagingSenderId: "718351438256",
+  appId:             "1:718351438256:web:d77e3cf1ee1d6e39a60675",
+  measurementId:     "G-7JZ53Q81S5"
+};
+
+const DEFAULTS = [
+  { name:"Fry Kaju",       unit:"Tin",    stock:0, low:2, log:[] },
+  { name:"4 Faad Kaju",    unit:"Tin",    stock:0, low:2, log:[] },
+  { name:"Silver Leaves",  unit:"Packet", stock:0, low:5, log:[] },
+  { name:"Desi Ghee",      unit:"Tin",    stock:0, low:1, log:[] },
+  { name:"Dalda Ghee",     unit:"Tin",    stock:0, low:1, log:[] },
+  { name:"Refined",        unit:"Tin",    stock:0, low:1, log:[] },
+  { name:"Groundnut Oil",  unit:"Tin",    stock:0, low:1, log:[] },
+  { name:"Rasgulla",       unit:"Tin",    stock:0, low:2, log:[] },
+  { name:"Elaichi",        unit:"Packet", stock:0, low:3, log:[] },
+  { name:"Pista",          unit:"Packet", stock:0, low:3, log:[] },
+  { name:"Jodhpuri Daana", unit:"Packet", stock:0, low:3, log:[] },
+];
+
+let materials = JSON.parse(JSON.stringify(DEFAULTS));
+let totalIn = 0, totalOut = 0;
+
+const app   = initializeApp(firebaseConfig);
+const db    = getDatabase(app);
+const dbRef = ref(db, 'stock');
+
+function nowFull() {
+  return new Date().toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true});
+}
+
+function setSyncStatus(s) {
+  document.getElementById('sync-dot').className = 'sync-dot ' + s;
+  document.getElementById('sync-txt').textContent = s==='online'?'Live Sync ✓':s==='syncing'?'Syncing...':'Offline';
+}
+
+function showToast(msg, err=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show'+(err?' err':'');
+  setTimeout(()=>t.className='toast', 2200);
+}
+
+function hideOverlay() {
+  const o = document.getElementById('overlay');
+  o.classList.add('hide');
+  setTimeout(()=>o.style.display='none', 450);
+}
+
+function updateSummary() {
+  document.getElementById('s-in').textContent  = totalIn;
+  document.getElementById('s-out').textContent = totalOut;
+  document.getElementById('s-low').textContent = materials.filter(m=>m.stock>0&&m.stock<=m.low).length;
+}
+
+function renderLog(log) {
+  if (!log||!log.length) return '<div class="log-empty">No entries yet</div>';
+  return log.slice().reverse().map(e=>
+    `<div class="log-entry"><span class="${e.dir===1?'log-in':'log-out'}">${e.dir===1?'+':'-'}${e.qty} ${e.unit}</span><span class="log-time">${e.time}</span></div>`
+  ).join('');
+}
+
+function renderCards() {
+  document.getElementById('cards').innerHTML = materials.map((m,i)=>{
+    const isLow = m.stock>0&&m.stock<=m.low;
+    return `<div class="card${isLow?' low':''}" id="card-${i}">
+      <div class="card-header">
+        <div class="card-left">
+          <div class="card-dot" style="background:${isLow?'var(--red-mid)':'var(--orange)'}"></div>
+          <span class="card-name">${m.name}${isLow?'<span class="low-pill">LOW</span>':''}</span>
+        </div>
+        <div class="card-right">
+          <span class="card-stock" id="cs-${i}">${m.stock}</span>
+          <span class="card-unit">${m.unit}</span>
+        </div>
+      </div>
+      <div class="card-controls">
+        <div class="qty-box">
+          <button class="qty-btn" onclick="changeQty(${i},-1)">−</button>
+          <span class="qty-disp" id="qv-${i}">1</span>
+          <button class="qty-btn" onclick="changeQty(${i},1)">+</button>
+        </div>
+        <button class="act-btn btn-add" onclick="adjust(${i},1)">+ Add</button>
+        <button class="act-btn btn-use" onclick="adjust(${i},-1)">− Use</button>
+      </div>
+      <div class="card-log" id="log-${i}">${renderLog(m.log)}</div>
+    </div>`;
+  }).join('');
+  updateSummary();
+}
+
+async function pushDB() {
+  setSyncStatus('syncing');
+  try {
+    const ts = nowFull();
+    await set(dbRef, { materials, totalIn, totalOut, savedAt: ts });
+    document.getElementById('last-saved').textContent = 'Last synced: ' + ts;
+    setSyncStatus('online');
+    showToast('✓ Synced to all devices');
+  } catch(e) {
+    setSyncStatus('');
+    showToast('⚠ Sync failed', true);
+  }
+}
+
+onValue(dbRef, snap => {
+  const data = snap.val();
+  if (data && data.materials) {
+    // Merge: keep existing stock data, add new products if missing
+    const savedNames = data.materials.map(m=>m.name);
+    const merged = data.materials.slice();
+    DEFAULTS.forEach(def => {
+      if (!savedNames.includes(def.name)) {
+        merged.push({...def});
+      }
+    });
+    materials = merged;
+    totalIn   = data.totalIn  || 0;
+    totalOut  = data.totalOut || 0;
+    const ts  = data.savedAt  || '';
+    document.getElementById('last-saved').textContent = ts ? 'Last synced: '+ts : '';
+  }
+  setSyncStatus('online');
+  renderCards();
+  hideOverlay();
+}, err => {
+  setSyncStatus('');
+  hideOverlay();
+  showToast('⚠ Cannot connect', true);
+});
+
+window.changeQty = (i,d) => {
+  const el = document.getElementById('qv-'+i);
+  el.textContent = Math.max(1,(parseInt(el.textContent)||1)+d);
+};
+
+window.adjust = async (idx, dir) => {
+  const qty = Math.max(1, parseInt(document.getElementById('qv-'+idx).textContent)||1);
+  const m = materials[idx];
+  if (dir===-1 && m.stock-qty<0) { showToast('⚠ Not enough stock!', true); return; }
+  m.stock += dir*qty;
+  if (dir===1) totalIn+=qty; else totalOut+=qty;
+  if (!m.log) m.log=[];
+  m.log.push({dir, qty, unit:m.unit, time:nowFull()});
+  if (m.log.length>30) m.log.shift();
+
+  const isLow = m.stock>0&&m.stock<=m.low;
+  document.getElementById('card-'+idx).className = 'card'+(isLow?' low':'');
+  document.getElementById('card-'+idx).querySelector('.card-name').innerHTML = m.name+(isLow?'<span class="low-pill">LOW</span>':'');
+  document.getElementById('card-'+idx).querySelector('.card-dot').style.background = isLow?'var(--red-mid)':'var(--orange)';
+  document.getElementById('cs-'+idx).textContent = m.stock;
+  document.getElementById('log-'+idx).innerHTML = renderLog(m.log);
+  updateSummary();
+  await pushDB();
+};
+
+window.resetAll = async () => {
+  if (!confirm('Reset all stock to 0?')) return;
+  materials.forEach(m=>m.stock=0);
+  totalIn=0; totalOut=0;
+  renderCards(); await pushDB();
+};
+
+window.clearLogs = async () => {
+  if (!confirm('Clear all logs?')) return;
+  materials.forEach(m=>m.log=[]);
+  renderCards(); await pushDB();
+};
+</script>
+</body>
+</html>
